@@ -12,6 +12,7 @@
 import torch
 import torch.nn as nn
 from omegaconf import DictConfig
+import copy
 
 from grasp_gen.models.nested_generator import NestedGraspGenGenerator
 from grasp_gen.models.discriminator import GraspGenDiscriminator
@@ -53,7 +54,7 @@ class NestedGraspGen(nn.Module):
         
         # For discrimination, we need to evaluate each sub-generator's output
         # Use the final combined grasps for scoring
-        data_for_disc = data.copy()
+        data_for_disc = copy.deepcopy(data)  # Deep copy to avoid side effects
         
         # Extract the last sub-generator's grasps (most refined)
         if "sub_generator_outputs" in outputs:

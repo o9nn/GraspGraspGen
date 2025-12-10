@@ -88,25 +88,29 @@ def parse_args():
     return parser.parse_args()
 
 
-def load_sample_data(data_dir):
-    """Load sample point cloud data.
+def create_dummy_data(data_dir):
+    """Create dummy point cloud data for demonstration.
+    
+    In a real implementation, this would load actual point cloud files
+    from the data directory (.npy, .pcd, etc.).
     
     Args:
-        data_dir: Directory containing sample data
+        data_dir: Directory that would contain sample data
         
     Returns:
-        dict: Data dictionary with point clouds
+        dict: Data dictionary with dummy point clouds
     """
-    # This is a placeholder - actual implementation would load point cloud files
-    # For demonstration, we create dummy data
-    logger.info(f"Loading sample data from {data_dir}")
+    logger.info(f"Creating dummy data (real implementation would load from {data_dir})")
     
-    # Example: load .npy or .pcd files from directory
+    # Example: In real implementation, load .npy or .pcd files from directory
+    # point_cloud = np.load(os.path.join(data_dir, "object.npy"))
+    # data = {"points": torch.from_numpy(point_cloud).float()}
+    
     data = {
         "points": torch.randn(1, 1024, 3),  # [batch, num_points, 3]
     }
     
-    logger.info(f"Loaded {data['points'].shape[0]} point cloud(s)")
+    logger.info(f"Created {data['points'].shape[0]} dummy point cloud(s)")
     return data
 
 
@@ -170,7 +174,7 @@ def main():
     logger.info("")
     
     # Load sample data
-    data = load_sample_data(args.sample_data_dir)
+    data = create_dummy_data(args.sample_data_dir)
     data["points"] = data["points"].to(args.device)
     
     # Create model configuration

@@ -204,13 +204,21 @@ class TestNestedGraspGenGenerator:
         # Create mock outputs from sub-generators
         all_outputs = []
         for i in range(6):
+            # Create likelihood tensor based on index for variety in test data
+            if i == 0:
+                likelihood = torch.randn(2, 5, 1)
+            elif i == 1:
+                likelihood = torch.randn(2, 3, 1)
+            else:
+                likelihood = torch.randn(2, 5, 1)
+            
             outputs = {
                 "grasps_pred": [torch.randn(5, 4, 4), torch.randn(3, 4, 4)],
                 "grasp_confidence": torch.randn(2),
                 "grasping_masks": torch.randn(2),
                 "grasp_contacts": torch.randn(2),
                 "instance_masks": torch.randn(2),
-                "likelihood": torch.randn(2, 5, 1) if i == 0 else torch.randn(2, 3, 1) if i == 1 else torch.randn(2, 5, 1),
+                "likelihood": likelihood,
             }
             all_outputs.append(outputs)
         

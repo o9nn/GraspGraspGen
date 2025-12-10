@@ -40,7 +40,7 @@ class NestedGraspGenGenerator(nn.Module):
 
     def __init__(
         self,
-        sub_generator_configs: List = None,
+        sub_generator_configs: Optional[List[Dict]] = None,
         combine_strategy: str = "hierarchical",
         grasp_repr: str = "r3_6d",
         **kwargs
@@ -229,7 +229,7 @@ class NestedGraspGenGenerator(nn.Module):
                 # Update data with current predictions for next sub-generator
                 if i < 5:  # Don't need to update after last sub-generator
                     if "grasps_pred" in outputs:
-                        current_data["grasps"] = [outputs["grasps_pred"][j] for j in range(len(outputs["grasps_pred"]))]
+                        current_data["grasps"] = outputs["grasps_pred"]
         else:
             # Parallel: all sub-generators process independently
             for i, sub_gen in enumerate(self.sub_generators):

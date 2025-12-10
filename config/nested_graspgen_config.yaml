@@ -42,30 +42,24 @@ nested_generator:
   # If not specified, all sub-generators use sub_generator_common settings
   sub_generators:
     # Sub-generator 0: processes x dimension
-    sub_gen_0:
+    sub_gen_0: {}
       # Inherits from sub_generator_common, can override specific parameters
       # Example: num_diffusion_iters: 150
-      pass
     
     # Sub-generator 1: processes y dimension  
-    sub_gen_1:
-      pass
+    sub_gen_1: {}
     
     # Sub-generator 2: processes z dimension
-    sub_gen_2:
-      pass
+    sub_gen_2: {}
     
     # Sub-generator 3: processes rotation dimension 1
-    sub_gen_3:
-      pass
+    sub_gen_3: {}
     
     # Sub-generator 4: processes rotation dimension 2
-    sub_gen_4:
-      pass
+    sub_gen_4: {}
     
     # Sub-generator 5: processes rotation dimension 3
-    sub_gen_5:
-      pass
+    sub_gen_5: {}
 
 # Discriminator configuration (for scoring generated grasps)
 discriminator:
