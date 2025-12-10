@@ -44,16 +44,19 @@ GraspGen is a modular framework for diffusion-based 6-DOF robotic grasp generati
    - [Pip Installation](#installation-with-pip)
 4. [Download Model Checkpoints](#download-checkpoints)
 5. [Inference Demos](#inference-demos)
-6. [Dataset](#dataset)
-7. [Training with Existing Datasets](#training-with-existing-datasets)
-8. [Bring Your Own Datasets (BYOD) - Training + Data Generation for new grippers and objects](#training--data-generation-for-new-objects-and-grippers)
-9. [GraspGen Format and Conventions](#graspgen-conventions)
-10. [FAQ](#faq)
-11. [License](#license)
-12. [Citation](#citation)
-13. [Contact](#contact)
+6. [Nested-Grasping Model (36-DoF)](#nested-grasping-model-36-dof)
+7. [Dataset](#dataset)
+8. [Training with Existing Datasets](#training-with-existing-datasets)
+9. [Bring Your Own Datasets (BYOD) - Training + Data Generation for new grippers and objects](#training--data-generation-for-new-objects-and-grippers)
+10. [GraspGen Format and Conventions](#graspgen-conventions)
+11. [FAQ](#faq)
+12. [License](#license)
+13. [Citation](#citation)
+14. [Contact](#contact)
 
 ## Release News
+
+- \[12/10/2025\] **NEW:** Nested-Grasping Model (36-DoF) - A hierarchical adaptation where each of the 6 DoF has its own 6-DoF GraspGen implementation! See [docs/NESTED_GRASPING.md](docs/NESTED_GRASPING.md) for details.
 
 - \[10/28/2025\] Add feature of filtering out colliding grasps based on scene point cloud.
 
@@ -160,6 +163,67 @@ cd /code/ && python scripts/demo_scene_pc.py --filter_collisions --sample_data_d
 <!-- <img src="fig/pc/collision4.png" width="400" height="300" title="collision4"> <img src="fig/pc/collision5.png" width="400" height="300" title="collision5"> -->
 
 <small>Note: At the time of release of this repo, the suction checkpoint was not trained with on-generator training, hence may not output the best grasp scores.</small>
+
+## Nested-Grasping Model (36-DoF)
+
+We provide a **nested-grasping adaptation** where each of the 6 degrees of freedom has its own 6-DoF GraspGen implementation, resulting in a **Grasping-of-Grasping** model with 6×6 = **36-DoF**. This hierarchical architecture enables more expressive grasp representations and progressive refinement.
+
+### Architecture Overview
+
+```
+Original GraspGen: 6-DoF (3 translation + 3 rotation)
+                     ↓
+Nested GraspGen: 36-DoF (6 sub-generators × 6 DoF each)
+  ├─ Sub-Generator 1: processes x-dimension     → 6 DoF
+  ├─ Sub-Generator 2: processes y-dimension     → 6 DoF
+  ├─ Sub-Generator 3: processes z-dimension     → 6 DoF
+  ├─ Sub-Generator 4: processes rot_1-dimension → 6 DoF
+  ├─ Sub-Generator 5: processes rot_2-dimension → 6 DoF
+  └─ Sub-Generator 6: processes rot_3-dimension → 6 DoF
+```
+
+### Quick Start
+
+```python
+from grasp_gen.models.nested_generator import NestedGraspGenGenerator
+
+# Create nested model with 6 sub-generators
+nested_model = NestedGraspGenGenerator(
+    sub_generator_configs=[base_config] * 6,
+    combine_strategy="hierarchical",  # or "parallel"
+    grasp_repr="r3_6d"
+)
+
+# Run inference
+data = {"points": point_cloud}  # [batch, num_points, 3]
+outputs, _, stats = nested_model.infer(data)
+
+# Output shape: [num_objects, num_grasps, 6_sub_gens, 4, 4]
+grasps = outputs["grasps_pred"]
+```
+
+### Example Script
+
+```bash
+python scripts/inference_nested_graspgen.py \
+    --sample_data_dir /path/to/data \
+    --gripper_config /path/to/config.yml \
+    --combine_strategy hierarchical \
+    --num_grasps 20
+```
+
+### Key Features
+
+- **Hierarchical Processing**: Each sub-generator refines outputs from the previous one
+- **Parallel Processing**: Alternative mode where all sub-generators process independently  
+- **Flexible Configuration**: Customize each sub-generator individually
+- **36-DoF Output**: Much more expressive grasp representation (54 dims for r3_6d, 36 dims for r3_so3)
+
+📖 **Full documentation**: [docs/NESTED_GRASPING.md](docs/NESTED_GRASPING.md)
+
+📝 **Example config**: [config/nested_graspgen_config.yaml](config/nested_graspgen_config.yaml)
+
+🧪 **Tests**: [tests/test_nested_model.py](tests/test_nested_model.py)
 
 ## Dataset
 

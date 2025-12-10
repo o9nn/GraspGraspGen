@@ -1,0 +1,129 @@
+# Nested GraspGen Configuration Example
+# This configuration demonstrates how to set up the 36-DoF nested-grasping model
+
+# Model type selection
+model_type: nested_graspgen  # Options: graspgen, nested_graspgen
+
+# Nested model configuration
+nested_generator:
+  # Strategy for combining sub-generator outputs
+  combine_strategy: hierarchical  # Options: hierarchical, parallel
+  
+  # Base grasp representation
+  grasp_repr: r3_6d  # Options: r3_6d (9D → 54D total), r3_so3 (6D → 36D total), r3_euler
+  
+  # Common configuration for all 6 sub-generators
+  # Each sub-generator will have these settings
+  sub_generator_common:
+    num_embed_dim: 256
+    num_obs_dim: 512
+    diffusion_embed_dim: 512
+    image_size: 256
+    num_diffusion_iters: 100
+    num_diffusion_iters_eval: 100
+    obs_backbone: pointnet  # Options: pointnet, ptv3, vit
+    compositional_schedular: false
+    loss_pointmatching: true
+    loss_l1_pos: false
+    loss_l1_rot: false
+    kappa: -1.0
+    clip_sample: true
+    beta_schedule: squaredcos_cap_v2
+    attention: cat
+    grid_size: 0.02
+    pose_repr: mlp
+    num_grasps_per_object: 20
+    checkpoint_object_encoder_pretrained: null
+  
+  # Gripper configuration
+  gripper_name: franka_panda  # Options: franka_panda, robotiq_2f_140, suction_30mm
+  
+  # Optional: Customize individual sub-generators
+  # If not specified, all sub-generators use sub_generator_common settings
+  sub_generators:
+    # Sub-generator 0: processes x dimension
+    sub_gen_0: {}
+      # Inherits from sub_generator_common, can override specific parameters
+      # Example: num_diffusion_iters: 150
+    
+    # Sub-generator 1: processes y dimension  
+    sub_gen_1: {}
+    
+    # Sub-generator 2: processes z dimension
+    sub_gen_2: {}
+    
+    # Sub-generator 3: processes rotation dimension 1
+    sub_gen_3: {}
+    
+    # Sub-generator 4: processes rotation dimension 2
+    sub_gen_4: {}
+    
+    # Sub-generator 5: processes rotation dimension 3
+    sub_gen_5: {}
+
+# Discriminator configuration (for scoring generated grasps)
+discriminator:
+  num_obs_dim: 512
+  num_embed_dim: 256
+  obs_backbone: pointnet
+  grasp_repr: r3_6d
+  gripper_name: franka_panda
+  checkpoint_object_encoder_pretrained: null
+
+# Training configuration
+train:
+  batch_size: 32
+  num_epochs: 5000
+  learning_rate: 0.0001
+  weight_decay: 0.0001
+  checkpoint: null  # Path to pretrained checkpoint
+  debug: false
+  
+# Inference configuration
+inference:
+  num_grasps: 20
+  return_topk: true
+  topk: 100
+  device: cuda
+  
+# Dataset configuration
+dataset:
+  grasp_dataset_path: /path/to/grasp_dataset
+  object_dataset_path: /path/to/object_dataset
+  cache_dir: /path/to/cache
+  num_redundant_datapoints: 7
+  
+# Logging configuration
+logging:
+  log_dir: /path/to/logs
+  tensorboard: true
+  console_log_level: INFO
+
+# Architecture Explanation:
+# ========================
+# The nested-grasping model extends the original 6-DoF GraspGen to 36-DoF
+# 
+# Original GraspGen: 6-DoF
+#   - Translation: 3 DoF (x, y, z)
+#   - Rotation: 3 DoF (rot_1, rot_2, rot_3)
+#
+# Nested GraspGen: 36-DoF (6 × 6)
+#   - Each of the 6 original DoF has its own 6-DoF GraspGen
+#   - Sub-generator 0: processes x → outputs 6-DoF
+#   - Sub-generator 1: processes y → outputs 6-DoF
+#   - Sub-generator 2: processes z → outputs 6-DoF
+#   - Sub-generator 3: processes rot_1 → outputs 6-DoF
+#   - Sub-generator 4: processes rot_2 → outputs 6-DoF
+#   - Sub-generator 5: processes rot_3 → outputs 6-DoF
+#
+# Output dimensions:
+#   - r3_6d: 6 sub-gens × 9 base dims = 54 total dims
+#   - r3_so3: 6 sub-gens × 6 base dims = 36 total dims (true 36-DoF)
+#
+# Hierarchical strategy:
+#   Each sub-generator processes the refined output from the previous one,
+#   allowing for progressive refinement of grasp predictions.
+#
+# Parallel strategy:
+#   All sub-generators process the original input independently,
+#   and outputs are combined at the end.
